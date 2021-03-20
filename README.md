@@ -10,7 +10,7 @@
 > - manage.py
 > 
 
-####常用命令
+#### 常用命令
 - 本地启动django服务器(默认启动地址为http://127.0.0.1:8000，可以在runserver后面加上期望的指定启动地址)
 
 `python manage.py runserver`
