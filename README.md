@@ -10,7 +10,17 @@
 > - manage.py
 > 
 
-#### 常用命令
+### 常用命令
+
+###### 在Anaconda命令行或其他能够执行pip命令的命令行中
+
+- 切换到requirements.txt同一目录下（工程文件夹目录下），安装依赖包
+
+`pip install -r requirements.txt`
+
+
+###### 以下命令需要切换目录到manage.py同一目录下（工程文件夹目录下）
+
 - 本地启动django服务器(默认启动地址为http://127.0.0.1:8000，可以在runserver后面加上期望的指定启动地址)
 
 `python manage.py runserver`
