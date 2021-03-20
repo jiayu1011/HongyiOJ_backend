@@ -2,6 +2,23 @@
 
 - Pycharm
 
+- 工程目录
+> HongyiOJ_backend
+> - HongyiOJ
+> - HongyiOJ_backend
+> - ...
+> - manage.py
+> 
+
+####常用命令
+- 本地启动django服务器(默认启动地址为http://127.0.0.1:8000，可以在runserver后面加上期望的指定启动地址)
+
+`python manage.py runserver`
+
+- 在修改了HongyiOJ > models.py后，需要将更新同步迁移到数据库中
+
+先`python manage.py makemigrations`看到发生了属性修改上的迁移, 再`python manage.py migrate`迁移变更
+
 ## 2. 开发方式
 
 - 开发中
