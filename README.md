@@ -19,6 +19,10 @@
 
 先`python manage.py makemigrations`看到发生了属性修改上的迁移, 再`python manage.py migrate`迁移变更
 
+- 创建工程下新的应用,xxx为期望的应用名称
+
+`python manage.py startapp xxx`
+
 ## 2. 开发方式
 
 - 开发中
