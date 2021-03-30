@@ -85,7 +85,7 @@ DATABASES = {
         'NAME': 'hongyi_oj',
         'USER': 'root',
         'PASSWORD': '991011XIN',
-        'HOST': 'localhost',
+        'HOST': '119.29.24.77',
         'PORT': '3307'
     }
 }
