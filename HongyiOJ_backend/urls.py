@@ -17,15 +17,18 @@ from django.contrib import admin
 from django.urls import path
 from HongyiOJ import views
 
-basicUrl = 'HongyiOJ/'
+basicUrl = 'HongyiOJ'
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path(basicUrl, views.test),
-    path(basicUrl + 'login/', views.login),
-    path(basicUrl + 'register/', views.register),
-    path(basicUrl + 'logout/', views.logout),
+
+    path(basicUrl + '/', views.test),
+    path(basicUrl + '/login', views.login),
+    path(basicUrl + '/register', views.register),
+    path(basicUrl + '/logout', views.logout),
+    path(basicUrl + '/problem/list', views.getProblemList),
+    path(basicUrl + '/upload/problem', views.uploadProblem),
 
 
 ]
