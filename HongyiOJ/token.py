@@ -10,10 +10,14 @@ import time
 SECRET_KEY = "asgfddasdasdasgerher"
 
 
-"""
-token generation
-"""
+
 def createToken(name):
+    """
+    Token generation
+    :param name: username
+    :return: token: token for Authorization in http headers
+    """
+
     global SECRET_KEY
     headers = {
         'alg': 'HS256',
@@ -37,18 +41,21 @@ def createToken(name):
     return token
 
 
-
-"""
-token validation
-"""
 def validateToken(token):
+    """
+    Token validation
+    :param token: token created by backend
+    :return:
+    payload: secret information
+    msg: exception message, will be None when validate success
+    """
 
     global SECRET_KEY
     payload = None
     msg = None
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, True, algorithms='HS256')
+        payload = jwt.decode(token, key=SECRET_KEY, algorithms='HS256')
 
     except exceptions.ExpiredSignatureError:
         msg = 'token已失效'
@@ -59,6 +66,12 @@ def validateToken(token):
 
     return payload, msg
 
+
+if __name__=='__main__':
+    t = createToken('qwer')
+    print(t)
+    p, m = validateToken(t)
+    print(p, m)
 
 
 

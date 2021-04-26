@@ -5,7 +5,7 @@ from django.db import models
 import datetime
 
 
-# 用户User
+# User
 class User(models.Model):
     username = models.CharField(max_length=100, primary_key=True)
     password = models.CharField(max_length=100, default='')
@@ -15,30 +15,36 @@ class User(models.Model):
         max_length=200,
         default='https://sf1-ttcdn-tos.pstatp.com/img/user-avatar/f4998fe95ef30363f12a04f670579825~300x300.image'
     )
-    acceptedCnt = models.IntegerField(default=0)
+    # Problems which the user has accepted, separated by ','
+    acProblems = models.CharField(max_length=1000, default='')
 
 
-# 题目Problem
+# Problem
 class Problem(models.Model):
     problemId = models.CharField(max_length=100, primary_key=True)
     uploader = models.CharField(max_length=100, default='')
     problemName = models.CharField(max_length=100, default='')
-    problemTags = models.CharField(max_length=100, default='')  # 题目标签
-    problemDiff = models.CharField(max_length=100, default='')  # 题目难度
-    problemBg = models.CharField(max_length=500, default='')  # 题目背景
-    problemDes = models.CharField(max_length=500, default='')
-    timeLimit = models.CharField(max_length=500, default='')  # 时间限制,以秒为单位
-    memoryLimit = models.CharField(max_length=500, default='')  # 内存限制,以MB为单位
-    inputFormat = models.CharField(max_length=200, default='')
-    outputFormat = models.CharField(max_length=200, default='')
-    ioExamples = models.CharField(max_length=200, default='')
-    problemTips = models.CharField(max_length=200, default='')
-    dataRange = models.CharField(max_length=200, default='')
-    dataGenerator = models.CharField(max_length=1000, default='')
-    stdProgram = models.CharField(max_length=1000, default='')
+    # Tags which describe the algorithm or method that the problem will use
+    problemTags = models.CharField(max_length=100, default='')
+    # The difficulty of the problem, choosing from 'elementary', 'easy', 'medium' and 'difficult'
+    problemDiff = models.CharField(max_length=100, default='')
+    # Background description of the problem
+    problemBg = models.CharField(max_length=1000, default='')
+    problemDes = models.CharField(max_length=5000, default='')
+    # Running time limit of the problem, described in millisecond(ms)
+    timeLimit = models.FloatField(default=0)
+    # Running memory limit of the problem, described in megabyte(MB)
+    memoryLimit = models.FloatField(default=0)
+    inputFormat = models.CharField(max_length=1000, default='')
+    outputFormat = models.CharField(max_length=1000, default='')
+    ioExamples = models.CharField(max_length=1000, default='')
+    problemTips = models.CharField(max_length=1000, default='')
+    dataRange = models.CharField(max_length=1000, default='')
+    dataGenerator = models.CharField(max_length=5000, default='')
+    stdProgram = models.CharField(max_length=5000, default='')
 
 
-# 评测Evaluation
+# Evaluation
 class Evaluation(models.Model):
     evaluationId = models.CharField(max_length=100, primary_key=True)  # 从E10000开始, E10001, E10002
     submitter = models.ForeignKey('User', to_field='username', on_delete=models.CASCADE)
@@ -46,20 +52,23 @@ class Evaluation(models.Model):
     submitTime = models.DateTimeField(auto_now=True)
     codeLanguage = models.CharField(max_length=100, default='')  # 本项目仅支持C / C++ / Python / Java
     submittedCode = models.CharField(max_length=1000, default='')
-    timeCost = models.FloatField(default=0)  # 以ms毫秒为单位
-    memoryCost = models.FloatField(default=0)  # 以MB为单位
+    # Running time of the problem, described in millisecond(ms)
+    timeCost = models.FloatField(default=0)
+    # Running memory of the problem, described in megabyte(MB)
+    memoryCost = models.FloatField(default=0)
     '''
-    evaluationResult 运行结果:
-    Accepted 运行通过
-    Time Limit Exceed 运行时间超出限制
-    Memory Limit Exceed 占用内存超出限制
-    Runtime Error 运行时错误
-    Presentation Error 格式错误
+    evaluationResult 
+    -----
+    Accepted 
+    Time Limit Exceed 
+    Memory Limit Exceed 
+    Runtime Error 
+    Presentation Error 
     
     '''
     evaluationResult = models.CharField(max_length=100, default='')
 
-    # 多字段联合约束
+    # multi-field unique constraint
     class Meta:
         unique_together = ('submitter', 'problemId', 'submitTime')
 
