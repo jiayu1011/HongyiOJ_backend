@@ -26,9 +26,14 @@ urlpatterns = [
     path(basicUrl + '/', views.test),
     path(basicUrl + '/login', views.login),
     path(basicUrl + '/register', views.register),
+    path(basicUrl + '/reset/password', views.resetPassword),
     path(basicUrl + '/logout', views.logout),
+    path(basicUrl + '/verify/code', views.getVerifyCode),
+    path(basicUrl + '/verify', views.verify),
     path(basicUrl + '/problem/list', views.getProblemList),
     path(basicUrl + '/upload/problem', views.uploadProblem),
+    path(basicUrl + '/review', views.reviewProblem),
+
 
 
 ]

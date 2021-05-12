@@ -42,6 +42,8 @@ class Problem(models.Model):
     dataRange = models.CharField(max_length=1000, default='')
     dataGenerator = models.CharField(max_length=5000, default='')
     stdProgram = models.CharField(max_length=5000, default='')
+    # Status in problem reviewing, choosing from 'reviewing', 'disapproved', 'approved'
+    reviewStatus = models.CharField(max_length=100, default='reviewing')
 
 
 # Evaluation

@@ -11,11 +11,11 @@ SECRET_KEY = "asgfddasdasdasgerher"
 
 
 
-def createToken(name):
+def createToken(username):
     """
     Token generation
-    :param name: username
-    :return: token: token for Authorization in http headers
+    :param username: username
+    :return: String: token for Authorization in http headers
     """
 
     global SECRET_KEY
@@ -23,10 +23,10 @@ def createToken(name):
         'alg': 'HS256',
         'typ': 'JWT'
     }
-    exp = int(time.time()+20)
+    t = int(time.time())
     payload = {
-        'name': name,
-        'exp': exp
+        'username': username,
+        't': t
     }
 
     token = jwt.encode(
