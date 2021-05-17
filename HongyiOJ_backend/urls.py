@@ -23,6 +23,7 @@ basicUrl = 'HongyiOJ'
 urlpatterns = [
     path('admin/', admin.site.urls),
 
+    # User related APIs
     path(basicUrl + '/', views.test),
     path(basicUrl + '/login', views.login),
     path(basicUrl + '/register', views.register),
@@ -30,9 +31,13 @@ urlpatterns = [
     path(basicUrl + '/logout', views.logout),
     path(basicUrl + '/verify/code', views.getVerifyCode),
     path(basicUrl + '/verify', views.verify),
-    path(basicUrl + '/problem/list', views.getProblemList),
+
+    # Problem related APIs
+    path(basicUrl + '/list/problem', views.getProblemList),
     path(basicUrl + '/upload/problem', views.uploadProblem),
-    path(basicUrl + '/review', views.reviewProblem),
+    path(basicUrl + '/review/problem', views.reviewProblem),
+
+
 
 
 

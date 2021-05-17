@@ -223,7 +223,7 @@ def getProblemList(request):
     """
     Problem list
     :param request:
-    GET {problemId|problemName, pageSize&currentPage, username}
+    GET {problemId|problemName, pageSize&currentPage, username， reviewStatus}
     ps: currentPage starts with 1
     :return:
     problemList: Array
@@ -231,7 +231,6 @@ def getProblemList(request):
     """
     print(request)
     res = {}
-    problemDictArr = Problem.objects.all().values()
     if not request.method == 'GET':
         return JsonResponse(methodWrongRes())
     # If user has logged in, validate his token
@@ -249,10 +248,11 @@ def getProblemList(request):
     if 'username' in request.GET:
         doneList = User.objects.get(username=request.GET['username']).acProblems.split(',')
 
+    problems = Problem.objects.all()
     if 'reviewStatus' in request.GET:
         problems = Problem.objects.filter(reviewStatus=request.GET['reviewStatus'])
-    else:
-        problems = Problem.objects.all()
+
+    problemDictArr = problems.values()
 
     if 'problemId' in request.GET:
         problemList.append(problems.filter(problemId=request.GET['problemId']).values()[0])
@@ -382,4 +382,20 @@ def reviewProblem(request):
     return JsonResponse(defaultRes())
 
 
+def codeSubmit(request):
+    """
+
+    :param request: {username, problemId, codeLanguage, code}
+    :return:
+    """
+    print(request)
+    res = {}
+    if request.method != 'POST':
+        return JsonResponse(methodWrongRes())
+    if not isTokenAvailable(request) is None:
+        return JsonResponse(isTokenAvailable(request))
+    if ('username' or 'problemId' or 'codeLanguage' or 'code') not in request.POST:
+        return JsonResponse(formEmptyRes())
+
+    return JsonResponse(defaultRes())
 

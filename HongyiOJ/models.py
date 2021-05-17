@@ -13,10 +13,11 @@ class User(models.Model):
     identity = models.CharField(max_length=100, default='user')
     avatarUrl = models.CharField(
         max_length=200,
-        default='https://sf1-ttcdn-tos.pstatp.com/img/user-avatar/f4998fe95ef30363f12a04f670579825~300x300.image'
+        default='http://119.29.24.77:8000/sources/HongyiOJ/image/hongyi_logo.png'
     )
     # Problems which the user has accepted, separated by ','
     acProblems = models.CharField(max_length=1000, default='')
+    collectedProblems = models.CharField(max_length=1000, default='')
 
 
 # Problem
@@ -49,11 +50,11 @@ class Problem(models.Model):
 # Evaluation
 class Evaluation(models.Model):
     evaluationId = models.CharField(max_length=100, primary_key=True)  # 从E10000开始, E10001, E10002
-    submitter = models.ForeignKey('User', to_field='username', on_delete=models.CASCADE)
-    problemId = models.ForeignKey('Problem', to_field='problemId', on_delete=models.CASCADE)
+    author = models.ForeignKey('User', to_field='username', on_delete=models.CASCADE, default='')
+    relatedProblemId = models.ForeignKey('Problem', to_field='problemId', on_delete=models.CASCADE, default='')
     submitTime = models.DateTimeField(auto_now=True)
     codeLanguage = models.CharField(max_length=100, default='')  # 本项目仅支持C / C++ / Python / Java
-    submittedCode = models.CharField(max_length=1000, default='')
+    code = models.CharField(max_length=1000, default='')
     # Running time of the problem, described in millisecond(ms)
     timeCost = models.FloatField(default=0)
     # Running memory of the problem, described in megabyte(MB)
@@ -68,40 +69,50 @@ class Evaluation(models.Model):
     Presentation Error 
     
     '''
-    evaluationResult = models.CharField(max_length=100, default='')
+    result = models.CharField(max_length=100, default='')
 
     # multi-field unique constraint
     class Meta:
-        unique_together = ('submitter', 'problemId', 'submitTime')
+        unique_together = ('author', 'relatedProblemId', 'submitTime')
 
 
-# 题解Solution
-class Solution(models.Model):
-    solutionId = models.CharField(max_length=100, primary_key=True)
-    problemId = models.ForeignKey('Problem', to_field='problemId', on_delete=models.CASCADE)
-    solutionAuthor = models.ForeignKey('User', to_field='username', on_delete=models.CASCADE)
-    updateTime = models.DateTimeField(auto_now=True)
-    solutionDes = models.CharField(max_length=1000, default='')  # 题解描述
-    solutionCode = models.CharField(max_length=1000, default='')  # 题解代码
+# 题解Discussion
+class Discussion(models.Model):
+    discussionId = models.CharField(max_length=100, primary_key=True)
+    postTime = models.DateTimeField(auto_now=True)
+    author = models.ForeignKey('User', to_field='username', on_delete=models.CASCADE, default='')
+    relatedProblemId = models.ForeignKey('Problem', to_field='problemId', on_delete=models.CASCADE, default='')
+    content = models.CharField(max_length=5000, default='')
 
 
 # 点赞ThumbsUp
 class ThumbsUp(models.Model):
     thumbsUpTime = models.DateTimeField(auto_now=True)
-    thumbsUpAuthor = models.ForeignKey('User', to_field='username', on_delete=models.CASCADE)
-    solutionId = models.ForeignKey('Solution', to_field='solutionId', on_delete=models.CASCADE)
+    author = models.ForeignKey('User', to_field='username', on_delete=models.CASCADE)
+    relatedDiscussionId = models.ForeignKey('Discussion', to_field='discussionId', on_delete=models.CASCADE, default='')
+
 
 
 # 评论Comment
 class Comment(models.Model):
-    commentTime = models.DateTimeField(auto_now=True)
-    commentAuthor = models.ForeignKey('User', to_field='username', on_delete=models.CASCADE)
-    solutionId = models.ForeignKey('Solution', to_field='solutionId', on_delete=models.CASCADE)
-    commentContent = models.CharField(max_length=500, default='')  # 评论内容
+    postTime = models.DateTimeField(auto_now=True)
+    author = models.ForeignKey('User', to_field='username', on_delete=models.CASCADE)
+    relatedDiscussionId = models.ForeignKey('Discussion', to_field='discussionId', on_delete=models.CASCADE, default='')
+    content = models.CharField(max_length=500, default='')  # 评论内容
 
 
 # 比赛Contest
 class Contest(models.Model):
     contestId = models.CharField(max_length=100, primary_key=True)
+    contestName = models.CharField(max_length=200, default='')
+    organizer = models.ForeignKey('User', to_field='username', on_delete=models.CASCADE, default='')
+    startTime = models.DateTimeField(auto_now=True)
+    endTime = models.DateTimeField(auto_now=True)
+    problemList = models.CharField(max_length=1000, default='')
+    # Status in problem reviewing, choosing from 'reviewing', 'disapproved', 'approved'
+    reviewStatus = models.CharField(max_length=100, default='reviewing')
+
+
+
 
 
