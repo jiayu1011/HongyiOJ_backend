@@ -55,6 +55,7 @@ class Evaluation(models.Model):
     submitTime = models.DateTimeField(auto_now=True)
     codeLanguage = models.CharField(max_length=100, default='')  # 本项目仅支持C / C++ / Python / Java
     code = models.CharField(max_length=1000, default='')
+    codeLength = models.IntegerField(default=0)
     # Running time of the problem, described in millisecond(ms)
     timeCost = models.FloatField(default=0)
     # Running memory of the problem, described in megabyte(MB)
@@ -62,6 +63,7 @@ class Evaluation(models.Model):
     '''
     evaluationResult 
     -----
+    Querying
     Accepted 
     Time Limit Exceed 
     Memory Limit Exceed 
@@ -69,7 +71,7 @@ class Evaluation(models.Model):
     Presentation Error 
     
     '''
-    result = models.CharField(max_length=100, default='')
+    result = models.CharField(max_length=100, default='Querying')
 
     # multi-field unique constraint
     class Meta:

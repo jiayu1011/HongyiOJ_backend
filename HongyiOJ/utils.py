@@ -6,12 +6,32 @@ from django.http import JsonResponse
 from HongyiOJ.token import *
 
 
-def createProblemId(seqNum):
-
+def generateProblemId(seqNum):
     seq = 10000 + seqNum
 
     problemId = 'P' + str(seq)
     return problemId
+
+
+def generateContestId(seqNum):
+    seq = 10000 + seqNum
+
+    contestId = 'C' + str(seq)
+    return contestId
+
+
+def generateDiscussionId(seqNum):
+    seq = 10000 + seqNum
+
+    discussionId = 'D' + str(seq)
+    return discussionId
+
+
+def generateEvaluationId(seqNum):
+    seq = 10000 + seqNum
+
+    evaluation = 'E' + str(seq)
+    return evaluation
 
 
 def removeDot(str):
@@ -36,11 +56,21 @@ def isTokenAvailable(request):
     return None
 
 
+def getCodeFileSuffix(codeLanguage):
+    clArr = ['C', 'C++', 'Python3', 'Java']
+    suffixArr = ['.c', '.cpp', '.python', '.java']
 
-if __name__=="__main__":
-    print(removeDot('www.eee.rrr'))
+    if codeLanguage not in clArr:
+        return '.txt'
+
+    return suffixArr[clArr.index(codeLanguage)]
+
+
+if __name__ == "__main__":
+    print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
     a = {
-        '123': 'test',
-        '456': 'te'
+        'add': 123,
+        'sss': 111
     }
-    print(('12' or '46') in a)
+    for key in a:
+        print(key)

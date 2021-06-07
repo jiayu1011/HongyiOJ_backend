@@ -38,6 +38,17 @@ urlpatterns = [
     path(basicUrl + '/review/problem', views.reviewProblem),
 
 
+    # Contest related APIs
+
+    # Discussion related APIs
+
+    # Evaluation related APIs
+    path(basicUrl + '/submit/code', views.submitCode),
+    path(basicUrl + '/list/evaluation', views.getEvaluationList),
+
+
+
+
 
 
 

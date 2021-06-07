@@ -13,7 +13,10 @@ from HongyiOJ.models import *
 from HongyiOJ.token import *
 from HongyiOJ.utils import *
 from HongyiOJ.config import *
+from HongyiOJ.response import *
 import re
+
+
 
 from django.core.mail import send_mail
 from HongyiOJ_backend import settings
@@ -26,7 +29,7 @@ def test(request):
     if request.method == 'GET':
         return HttpResponse('Welcome to Hongyi OJ!')
     else:
-        return JsonResponse(methodWrongRes())
+        return MyResponse.methodWrongRes
 
 
 def login(request):
@@ -38,9 +41,9 @@ def login(request):
     print(request)
     res = {}
     if not request.method == 'POST':
-        return JsonResponse(methodWrongRes())
+        return MyResponse.methodWrongRes
     if not request.POST:
-        return JsonResponse(formEmptyRes())
+        return MyResponse.formEmptyRes
 
     print(request.POST)
     if not User.objects.filter(username=request.POST['username']).exists():
@@ -77,9 +80,9 @@ def register(request):
     print(request)
     res = {}
     if not request.method == 'POST':
-        return JsonResponse(methodWrongRes())
+        return MyResponse.methodWrongRes
     if not request.POST:
-        return JsonResponse(formEmptyRes())
+        return MyResponse.formEmptyRes
     print(request.POST)
     POST_dict = request.POST.dict()
 
@@ -115,9 +118,9 @@ def getVerifyCode(request):
     print(request)
     res = {}
     if not request.method == 'GET':
-        return JsonResponse(methodWrongRes())
+        return MyResponse.methodWrongRes
     if 'email' not in request.GET:
-        return JsonResponse(formEmptyRes())
+        return MyResponse.formEmptyRes
 
     sub = '欢迎使用Hongyi OJ!'
 
@@ -140,7 +143,7 @@ def getVerifyCode(request):
     global verifyDict
     verifyDict[targetEmail] = code
 
-    return JsonResponse(defaultRes())
+    return MyResponse.defaultRes
 
 
 
@@ -154,9 +157,9 @@ def verify(request):
     print(request)
     res = {}
     if not request.method == "POST":
-        return JsonResponse(methodWrongRes())
+        return MyResponse.methodWrongRes
     if ('email' or 'verifyCode') not in request.POST:
-        return JsonResponse(formEmptyRes())
+        return MyResponse.formEmptyRes
 
     global verifyDict
     print(verifyDict)
@@ -171,7 +174,7 @@ def verify(request):
         return JsonResponse(res)
 
     del verifyDict[request.POST['email']]
-    return JsonResponse(defaultRes())
+    return MyResponse.defaultRes
 
 
 
@@ -180,11 +183,11 @@ def resetPassword(request):
     print(request)
     res = {}
     if not request.method == 'PUT':
-        return JsonResponse(methodWrongRes())
+        return MyResponse.methodWrongRes
     PUT = QueryDict(request.body)
 
     if 'email' not in PUT and 'password' not in PUT:
-        return JsonResponse(formEmptyRes())
+        return MyResponse.formEmptyRes
 
     if not User.objects.filter(email=PUT['email']).exists():
         res['isOk'] = False
@@ -193,7 +196,7 @@ def resetPassword(request):
 
     User.objects.filter(email=PUT['email']).update(password=PUT['password'])
 
-    return JsonResponse(defaultRes())
+    return MyResponse.defaultRes
 
 
 def logout(request):
@@ -206,11 +209,11 @@ def logout(request):
     print(request)
     res = {}
     if not request.method == 'PUT':
-        return JsonResponse(methodWrongRes())
+        return MyResponse.methodWrongRes
 
     PUT = QueryDict(request.body)
     if 'username' not in PUT:
-        return JsonResponse(formEmptyRes())
+        return MyResponse.formEmptyRes
 
     res['isOk'] = True
     res['errMsg'] = ''
@@ -232,7 +235,7 @@ def getProblemList(request):
     print(request)
     res = {}
     if not request.method == 'GET':
-        return JsonResponse(methodWrongRes())
+        return MyResponse.methodWrongRes
     # If user has logged in, validate his token
     if 'HTTP_AUTHORIZATION' in request.META:
         if not isTokenAvailable(request) is None:
@@ -283,7 +286,7 @@ def getProblemList(request):
             targetProblems.append(Problem.objects.filter(**cds).values()[0])
 
     if ('pageSize' or 'currentPage') not in request.GET:
-        return JsonResponse(formEmptyRes())
+        return MyResponse.formEmptyRes
 
     if 'problemName' in request.GET:
         resultSum = len(targetProblems)
@@ -345,19 +348,20 @@ def uploadProblem(request):
     print(request)
     res = {}
     if not request.method == 'POST':
-        return JsonResponse(methodWrongRes())
+        return MyResponse.methodWrongRes
     if not isTokenAvailable(request) is None:
         return JsonResponse(isTokenAvailable(request))
     if not request.POST:
-        return JsonResponse(formEmptyRes())
+        return MyResponse.formEmptyRes
     POST_dict = request.POST.dict()
     seqNum = Problem.objects.count() + 1
-    POST_dict['problemId'] = createProblemId(seqNum)
+    POST_dict['problemId'] = generateProblemId(seqNum)
     POST_dict['reviewStatus'] = 'reviewing'
+
 
     Problem.objects.create(**POST_dict)
 
-    return JsonResponse(defaultRes())
+    return MyResponse.defaultRes
 
 
 def reviewProblem(request):
@@ -370,32 +374,101 @@ def reviewProblem(request):
     print(request)
     res = {}
     if not request.method == 'PUT':
-        return JsonResponse(methodWrongRes())
+        return MyResponse.methodWrongRes
     if not isTokenAvailable(request) is None:
         return JsonResponse(isTokenAvailable(request))
 
     PUT = QueryDict(request.body)
     if ('problemId' or 'reviewStatus') not in PUT:
-        return JsonResponse(formEmptyRes())
+        return MyResponse.formEmptyRes
     Problem.objects.filter(problemId=PUT['problemId']).update(reviewStatus=PUT['reviewStatus'])
 
-    return JsonResponse(defaultRes())
+    return MyResponse.defaultRes
 
 
-def codeSubmit(request):
+def submitCode(request):
     """
 
-    :param request: {username, problemId, codeLanguage, code}
+    :param request: {author, relatedProblemId, codeLanguage, code}
     :return:
     """
     print(request)
     res = {}
     if request.method != 'POST':
-        return JsonResponse(methodWrongRes())
+        return MyResponse.methodWrongRes
     if not isTokenAvailable(request) is None:
         return JsonResponse(isTokenAvailable(request))
-    if ('username' or 'problemId' or 'codeLanguage' or 'code') not in request.POST:
-        return JsonResponse(formEmptyRes())
+    if ('author' or 'relatedProblemId' or 'codeLanguage' or 'code') not in request.POST:
+        return MyResponse.formEmptyRes
 
-    return JsonResponse(defaultRes())
+    POST_dict = request.POST.dict()
+    seqNum = Evaluation.objects.count() + 1
+    eId = generateEvaluationId(seqNum)
+    POST_dict['evaluationId'] = eId
+    POST_dict['submitTime'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    POST_dict['author'] = User(username=POST_dict['author'])
+    POST_dict['relatedProblemId'] = Problem(problemId=POST_dict['relatedProblemId'])
+    POST_dict['codeLength'] = len(POST_dict['code'])
+    Evaluation.objects.create(**POST_dict)
 
+    with open(Config.codeSubmitRepoPath+'/'+eId+'_code'+getCodeFileSuffix(POST_dict['codeLanguage']), 'w') as f:
+        f.writelines(POST_dict['code'])
+
+
+
+    return MyResponse.defaultRes
+
+
+def getEvaluationList(request):
+    """
+
+    :param request:
+    :return:
+    """
+    print(request)
+    res = {}
+    eva = Evaluation.objects.all()
+    if request.method != 'GET':
+        return MyResponse.methodWrongRes
+    if ('currentPage' or 'pageSize') not in request.GET:
+        return MyResponse.formEmptyRes
+    if not isTokenAvailable(request) is None:
+        return JsonResponse(isTokenAvailable(request))
+
+    if 'relatedProblemId' in request.GET:
+        eva = eva.filter(relatedProblemId=request.GET['relatedProblemId'])
+
+    if 'author' in request.GET:
+        eva = eva.filter(author=request.GET['author'])
+
+    evaList = []
+    for item in eva.values():
+        evaList.append(item)
+    evaList.reverse()
+
+    totalNum = len(evaList)
+
+    pageSize = int(request.GET['pageSize'])
+    currentPage = int(request.GET['currentPage'])
+
+    startSeq = min(pageSize * (currentPage - 1), totalNum)
+    endSeq = min(pageSize * currentPage, totalNum)
+
+    evaList = evaList[startSeq:endSeq]
+
+    for item in evaList:
+        for key in item:
+            if key=='author_id':
+                item['author'] = item[key]
+                del item[key]
+            elif key=='relatedProblemId_id':
+                item['relatedProblemId'] = item[key]
+                del item[key]
+            elif key=='submitTime':
+                item[key] = item[key].strftime('%Y-%m-%d %H:%M:%S')
+
+    res['evaluationList'] = evaList
+    res['isOk'] = True
+    res['errMsg'] = ''
+
+    return JsonResponse(res)
