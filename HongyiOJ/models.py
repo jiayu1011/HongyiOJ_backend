@@ -27,7 +27,15 @@ class Problem(models.Model):
     problemName = models.CharField(max_length=100, default='')
     # Tags which describe the algorithm or method that the problem will use
     problemTags = models.CharField(max_length=100, default='')
-    # The difficulty of the problem, choosing from 'elementary', 'easy', 'medium' and 'difficult'
+
+    '''
+    The difficulty of the problem, choosing from
+    -----
+    'elementary'
+    'easy'
+    'medium'
+    'difficult'
+    '''
     problemDiff = models.CharField(max_length=100, default='')
     # Background description of the problem
     problemBg = models.CharField(max_length=1000, default='')
@@ -43,35 +51,43 @@ class Problem(models.Model):
     dataRange = models.CharField(max_length=1000, default='')
     dataGenerator = models.CharField(max_length=5000, default='')
     stdProgram = models.CharField(max_length=5000, default='')
-    # Status in problem reviewing, choosing from 'reviewing', 'disapproved', 'approved'
+
+    '''
+    Status in problem reviewing, choosing from
+    -----
+    'reviewing'
+    'disapproved' 
+    'approved'
+    '''
     reviewStatus = models.CharField(max_length=100, default='reviewing')
 
 
 # Evaluation
 class Evaluation(models.Model):
-    evaluationId = models.CharField(max_length=100, primary_key=True)  # 从E10000开始, E10001, E10002
+    evaluationId = models.CharField(max_length=100, primary_key=True)  # Start from E10000, then E10001, E10002..
     author = models.ForeignKey('User', to_field='username', on_delete=models.CASCADE, default='')
     relatedProblemId = models.ForeignKey('Problem', to_field='problemId', on_delete=models.CASCADE, default='')
     submitTime = models.DateTimeField(auto_now=True)
-    codeLanguage = models.CharField(max_length=100, default='')  # 本项目仅支持C / C++ / Python / Java
+    # HongyiOJ only support evaluating C / C++ / Python / Java
+    codeLanguage = models.CharField(max_length=100, default='')
     code = models.CharField(max_length=1000, default='')
     codeLength = models.IntegerField(default=0)
     # Running time of the problem, described in millisecond(ms)
     timeCost = models.FloatField(default=0)
     # Running memory of the problem, described in megabyte(MB)
     memoryCost = models.FloatField(default=0)
+
     '''
-    evaluationResult 
+    evaluationResult, choosing from
     -----
-    Querying
-    Accepted 
-    Time Limit Exceed 
-    Memory Limit Exceed 
-    Runtime Error 
-    Presentation Error 
-    
+    'Queuing'
+    'Accepted' 
+    'Time Limit Exceed' 
+    'Memory Limit Exceed' 
+    'Runtime Error' 
+    'Presentation Error'
     '''
-    result = models.CharField(max_length=100, default='Querying')
+    result = models.CharField(max_length=100, default='Queuing')
 
     # multi-field unique constraint
     class Meta:
@@ -111,7 +127,14 @@ class Contest(models.Model):
     startTime = models.DateTimeField(auto_now=True)
     endTime = models.DateTimeField(auto_now=True)
     problemList = models.CharField(max_length=1000, default='')
-    # Status in problem reviewing, choosing from 'reviewing', 'disapproved', 'approved'
+
+    '''
+    Status in contest reviewing, choosing from
+    -----
+    'reviewing'
+    'disapproved' 
+    'approved'
+    '''
     reviewStatus = models.CharField(max_length=100, default='reviewing')
 
 

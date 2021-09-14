@@ -15,6 +15,7 @@ from HongyiOJ.utils import *
 from HongyiOJ.config import *
 from HongyiOJ.response import *
 import re
+import HongyiOJ.bash
 
 
 
@@ -411,8 +412,15 @@ def submitCode(request):
     POST_dict['codeLength'] = len(POST_dict['code'])
     Evaluation.objects.create(**POST_dict)
 
-    with open(Config.codeSubmitRepoPath+'/'+eId+'_code'+getCodeFileSuffix(POST_dict['codeLanguage']), 'w') as f:
+    # store recent code in the disk
+    with open(Config.codeSubmitStorePath+'/'+eId+'_code'+getCodeFileSuffix(POST_dict['codeLanguage']), 'w') as f:
         f.writelines(POST_dict['code'])
+
+    # docker preparation
+    HongyiOJ.bash.PrepareDocker(eId)
+
+
+
 
 
 

@@ -84,3 +84,7 @@ fix: 修复综合搜索dem不能正常创建导出任务的问题
 
 perf: 优化 heatMap 更高层级的聚合点显示
 ```
+
+## 4.项目参数设定说明
+
+- 近期通过题库提交的代码文件存储在`/HongyiOJ/Evaluation/submitCode`下

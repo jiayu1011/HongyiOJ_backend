@@ -58,7 +58,7 @@ def isTokenAvailable(request):
 
 def getCodeFileSuffix(codeLanguage):
     clArr = ['C', 'C++', 'Python3', 'Java']
-    suffixArr = ['.c', '.cpp', '.python', '.java']
+    suffixArr = ['.c', '.cpp', '.py', '.java']
 
     if codeLanguage not in clArr:
         return '.txt'
