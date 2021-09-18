@@ -3,19 +3,15 @@ django视图
 """
 import random
 
-from django.shortcuts import render
-
 # Create your views here.
 
-import os
-from django.http import HttpResponse, JsonResponse, FileResponse, QueryDict
+from django.http import QueryDict
 from HongyiOJ.models import *
-from HongyiOJ.token import *
 from HongyiOJ.utils import *
 from HongyiOJ.config import *
 from HongyiOJ.response import *
 import re
-import HongyiOJ.bash
+import DockerConfig.docker
 
 
 
@@ -408,16 +404,27 @@ def submitCode(request):
     POST_dict['evaluationId'] = eId
     POST_dict['submitTime'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     POST_dict['author'] = User(username=POST_dict['author'])
+    rPId = POST_dict['relatedProblemId']
     POST_dict['relatedProblemId'] = Problem(problemId=POST_dict['relatedProblemId'])
+
     POST_dict['codeLength'] = len(POST_dict['code'])
     Evaluation.objects.create(**POST_dict)
 
-    # store recent code in the disk
-    with open(Config.codeSubmitStorePath+'/'+eId+'_code'+getCodeFileSuffix(POST_dict['codeLanguage']), 'w') as f:
+    # Store recent code in the disk
+    with open(
+            Config.codeSubmitStorePath + '/' + formatCodeFile(evaluationId=eId, codeLanguage=POST_dict['codeLanguage']),
+            'w'
+    ) as f:
         f.writelines(POST_dict['code'])
+    # with open(Config.codeSubmitStorePath+'/'+eId+'_code'+getCodeFileSuffix(POST_dict['codeLanguage']), 'w') as f:
+    #     f.writelines(POST_dict['code'])
 
-    # docker preparation
-    HongyiOJ.bash.PrepareDocker(eId)
+    # Docker preparation
+    limitations = {
+        'timeLimit': Problem.objects.get(problemId=rPId).timeLimit,
+        'memoryLimit': Problem.objects.get(problemId=rPId).memoryLimit
+    }
+    DockerConfig.docker.PrepareDocker(eId, limitations)
 
 
 

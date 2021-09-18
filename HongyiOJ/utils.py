@@ -65,12 +65,13 @@ def getCodeFileSuffix(codeLanguage):
 
     return suffixArr[clArr.index(codeLanguage)]
 
+def formatCodeFile(evaluationId, codeLanguage):
+    return '{}_code{}'.format(evaluationId, getCodeFileSuffix(codeLanguage))
+
+def formatResultFile(evaluationId):
+    return '{}_result.txt'.format(evaluationId)
+
 
 if __name__ == "__main__":
-    print(datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-    a = {
-        'add': 123,
-        'sss': 111
-    }
-    for key in a:
-        print(key)
+    print(formatCodeFile(evaluationId='E10001', codeLanguage='Python3'))
+    print(formatResultFile('E10002'))
