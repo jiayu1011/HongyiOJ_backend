@@ -1,22 +1,23 @@
 """
 django视图
 """
+
 import random
 
 # Create your views here.
 
 from django.http import QueryDict
+
 from HongyiOJ.models import *
 from HongyiOJ.utils import *
 from HongyiOJ.config import *
 from HongyiOJ.response import *
 import re
-import DockerConfig.docker
-
-
 
 from django.core.mail import send_mail
 from HongyiOJ_backend import settings
+from HongyiOJ_evaluator.DockerConfig import docker
+from HongyiOJ_evaluator.DockerScript import analyze
 
 verifyDict = {}
 
@@ -27,6 +28,13 @@ def test(request):
         return HttpResponse('Welcome to Hongyi OJ!')
     else:
         return MyResponse.methodWrongRes
+
+
+"""
+---------------------------------------------
+-----------------User Part-------------------
+---------------------------------------------
+"""
 
 
 def login(request):
@@ -218,6 +226,15 @@ def logout(request):
     return JsonResponse(res)
 
 
+"""
+---------------------------------------------
+-----------------Problem Part----------------
+---------------------------------------------
+"""
+
+
+
+
 
 def getProblemList(request):
     """
@@ -319,9 +336,9 @@ def getProblemList(request):
 
             problemList.append(item)
 
-    for item in problemList:
-        del item['stdProgram']
-        del item['dataGenerator']
+    # for item in problemList:
+    #     del item['stdInput']
+    #     del item['stdOutput']
 
     res['problemList'] = problemList
     res['resultSum'] = resultSum
@@ -361,6 +378,17 @@ def uploadProblem(request):
     return MyResponse.defaultRes
 
 
+
+"""
+---------------------------------------------
+-----------------Manage Part-----------------
+---------------------------------------------
+"""
+
+
+
+
+
 def reviewProblem(request):
     """
     Review problems
@@ -381,6 +409,37 @@ def reviewProblem(request):
     Problem.objects.filter(problemId=PUT['problemId']).update(reviewStatus=PUT['reviewStatus'])
 
     return MyResponse.defaultRes
+
+
+def deleteProblem(request):
+    """
+
+    :param request:
+    :return:
+    """
+    print(request)
+    res = {}
+    if not request.method == 'DELETE':
+        return MyResponse.methodWrongRes
+    if not isTokenAvailable(request) is None:
+        return JsonResponse(isTokenAvailable(request))
+
+    Problem.objects.filter(problemId=request.GET['problemId']).delete()
+
+
+
+    return MyResponse.defaultRes
+
+
+
+
+"""
+---------------------------------------------
+-----------------Evaluation Part-------------
+---------------------------------------------
+"""
+
+
 
 
 def submitCode(request):
@@ -424,7 +483,13 @@ def submitCode(request):
         'timeLimit': Problem.objects.get(problemId=rPId).timeLimit,
         'memoryLimit': Problem.objects.get(problemId=rPId).memoryLimit
     }
-    DockerConfig.docker.PrepareDocker(eId, limitations)
+
+    dockerOutputFilePath = docker.PrepareDocker(eId, limitations)
+    standardOutputFilePath = ''
+    analyze.outputAnalyze(standardOutputFilePath, dockerOutputFilePath)
+
+
+
 
 
 

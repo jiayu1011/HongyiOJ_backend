@@ -1,9 +1,12 @@
 import datetime
 
 # 从P10000开始, P10001, P10002
+import os
+
 from django.http import JsonResponse
 
 from HongyiOJ.token import *
+import HongyiOJ.config as BackendConfig
 
 
 def generateProblemId(seqNum):
@@ -55,23 +58,43 @@ def isTokenAvailable(request):
         return res
     return None
 
-
+# 'C++' -> '.cpp'
 def getCodeFileSuffix(codeLanguage):
-    clArr = ['C', 'C++', 'Python3', 'Java']
-    suffixArr = ['.c', '.cpp', '.py', '.java']
+    suffixDic = BackendConfig.Config.codeSuffixDic
 
-    if codeLanguage not in clArr:
+    if codeLanguage not in suffixDic:
         return '.txt'
 
-    return suffixArr[clArr.index(codeLanguage)]
+    return suffixDic[codeLanguage]
+
+# '.cpp' -> 'C++'
+def getCodeLanguage(suffix):
+    suffixDic = BackendConfig.Config.codeSuffixDic
+    for key in suffixDic:
+        if suffixDic[key] == suffix:
+            return key
+
+    return ''
 
 def formatCodeFile(evaluationId, codeLanguage):
     return '{}_code{}'.format(evaluationId, getCodeFileSuffix(codeLanguage))
 
-def formatResultFile(evaluationId):
-    return '{}_result.txt'.format(evaluationId)
+def formatOutputFile(evaluationId):
+    return '{}_output.txt'.format(evaluationId)
+
+def formatOutputFolder(evaluationId):
+    return '{}_output'.format(evaluationId)
 
 
 if __name__ == "__main__":
     print(formatCodeFile(evaluationId='E10001', codeLanguage='Python3'))
-    print(formatResultFile('E10002'))
+    print(formatOutputFile('E10002'))
+    print(getCodeLanguage('.py'))
+    print(os.getcwd())
+    a = '\n' +\
+        '   ' +\
+        'as  dd' +\
+        '   ' +\
+        '\n'
+
+    print('\n 1 2  '.split())

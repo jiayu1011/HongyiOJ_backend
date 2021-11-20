@@ -49,8 +49,8 @@ class Problem(models.Model):
     ioExamples = models.CharField(max_length=1000, default='')
     problemTips = models.CharField(max_length=1000, default='')
     dataRange = models.CharField(max_length=1000, default='')
-    dataGenerator = models.CharField(max_length=5000, default='')
-    stdProgram = models.CharField(max_length=5000, default='')
+    stdInput = models.CharField(max_length=5000, default='')
+    stdOutput = models.CharField(max_length=5000, default='')
 
     '''
     Status in problem reviewing, choosing from
