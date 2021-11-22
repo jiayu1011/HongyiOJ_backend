@@ -84,10 +84,13 @@ class Evaluation(models.Model):
     'Accepted' 
     'Time Limit Exceed' 
     'Memory Limit Exceed' 
+    'Compile Error'
     'Runtime Error' 
     'Presentation Error'
+    'Wrong Answer'
     '''
     result = models.CharField(max_length=100, default='Queuing')
+    errLog = models.CharField(max_length=2000, default='')
 
     # multi-field unique constraint
     class Meta:

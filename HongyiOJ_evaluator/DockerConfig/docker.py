@@ -3,24 +3,28 @@ import shutil
 
 
 import HongyiOJ.config as HostConfig
+import HongyiOJ_evaluator.DockerConfig.config
 import HongyiOJ_evaluator.DockerConfig.config as DockerConfig
 from HongyiOJ.utils import *
 
 
-def PrepareDocker(evaluationId, limitations):
-    os.chdir(HostConfig.Config.dockerPreparedPath)
+def runDocker(evaluationId, problemId, stdInputTxt, stdOutputTxt, limitations) -> str:
+    hostConfig = HostConfig.Config()
+    dockerConfig = DockerConfig.Config(evaluationId=evaluationId, problemId=problemId)
+
+    os.chdir(hostConfig.dockerPreparedPath)
     os.mkdir(evaluationId)
 
-    os.chdir(HostConfig.Config.dockerPreparedPath + '/' + evaluationId)
+    os.chdir(hostConfig.dockerPreparedPath + '/' + evaluationId)
     codeFileName = ''
     codeFilePath = ''
     destFilePath = ''
     codeLanguage = ''
-    for file in os.listdir(HostConfig.Config.codeSubmitStorePath):
+    for file in os.listdir(hostConfig.codeSubmitStorePath):
         # Find the exact code file and then copy
         if file.find(evaluationId) != -1:
-            source = HostConfig.Config.codeSubmitStorePath + '/' + file
-            dest = HostConfig.Config.dockerPreparedPath + '/' + evaluationId
+            source = hostConfig.codeSubmitStorePath + '/' + file
+            dest = hostConfig.dockerPreparedPath + '/' + evaluationId
             codeFileName = file
             codeFilePath = source
             destFilePath = dest
@@ -32,20 +36,29 @@ def PrepareDocker(evaluationId, limitations):
 
             break
 
-    shutil.copy(HostConfig.Config.dockerScriptPath, destFilePath)
+    os.system(f'cp -r {hostConfig.dockerScriptFolderPath} {destFilePath}')
+    os.system(f'cp {"/HongyiOJ/HongyiOJ_backend/HongyiOJ_evaluator/DockerConfig/config.py"} {destFilePath}/DockerScript/DockerConfig.py')
+    os.system(f'cp {"/HongyiOJ/HongyiOJ_backend/HongyiOJ/config.py"} {destFilePath}/DockerScript/HostConfig.py')
 
+    with open(f'{problemId}_stdInput.txt', 'w') as f:
+        f.write(stdInputTxt)
+    with open(f'{problemId}_stdOutput.txt', 'w') as f:
+        f.write(stdOutputTxt)
 
     # create dockerfile
     with open('Dockerfile', 'w') as f:
         f.writelines(
             DockerfileTemplate(
                 evaluationId=evaluationId,
+                problemId=problemId,
                 codeFileName=codeFileName,
                 codeFilePath=codeFilePath,
                 codeLanguage=codeLanguage,
                 limitations=limitations
             )
         )
+
+
 
     """
     Docker Start
@@ -62,19 +75,21 @@ def PrepareDocker(evaluationId, limitations):
     # Entering docker bash
     # Analyzing && Running!
 
+    # Check whether docker has done its work
+
+
 
     # Get docker running result
-    """
-    docker cmd:
-    docker cp [OPTIONS] CONTAINER:SRC_PATH DEST_PATH
-    """
-    outputFileName = formatOutputFile(evaluationId)
-    outputFolderName = formatOutputFolder(evaluationId)
-    SRC_PATH = '/Temp/{}'.format(outputFolderName)
-    DEST_PATH = ''
+    # """
+    # docker cmd:
+    # docker cp [OPTIONS] CONTAINER:SRC_PATH DEST_PATH
+    # """
+    outputFolderPath = dockerConfig.outputFolderPath
+    SRC_PATH = outputFolderPath
+    DEST_PATH = f'{hostConfig.dockerPreparedPath}/{evaluationId}'
     os.system('docker cp {}:{} {}'.format(containerName, SRC_PATH, DEST_PATH))
-
-    # Delete container and image after all
+    #
+    # # Delete container and image after all
     os.system('docker rm {}'.format(containerName))
     os.system('docker rmi {}'.format(imageName))
 
@@ -83,35 +98,34 @@ def PrepareDocker(evaluationId, limitations):
     """
 
     """
-    ${evaluationId}_output.txt and standard output already exist 
-    """
-
-    """
-    Compare output with standard output
+    ${evaluationId}_output.txt and "analyze_result.txt" already exist 
     """
 
 
-    dockerOutputFilePath = os.getcwd() + "\\{}_output.txt".format(evaluationId)
+    evaluationOutputFolderPath = f'{os.getcwd()}/{hostConfig.outputFolderName}'
 
 
-    return dockerOutputFilePath
+    return evaluationOutputFolderPath
 
 
-def DockerfileTemplate(evaluationId, codeFileName, codeFilePath, codeLanguage, limitations) -> str:
+def DockerfileTemplate(evaluationId, problemId, codeFileName, codeFilePath, codeLanguage, limitations) -> str:
     """
 
     :param evaluationId:
+    :param problemId:
     :param codeFileName:
     :param codeFilePath:
     :param codeLanguage:
     :param limitations:
     :return:
     """
+    hostConfig = HostConfig.Config()
+    dockerConfig = DockerConfig.Config(evaluationId=evaluationId, problemId=problemId)
 
-    scriptFilePathSrc = HostConfig.Config.dockerScriptPath
-    scriptFilePathDst = DockerConfig.Config.scriptFilePath
-    destPath = DockerConfig.Config.tempPath
-    baseImageName = DockerConfig.Config.evaluatorImageName
+    scriptFolderPathSrc = hostConfig.dockerScriptFolderPath
+    startScriptFilePath = '{}/{}'.format(dockerConfig.scriptFolderPath, 'script.py')
+    destPath = dockerConfig.rootPath
+    baseImageName = dockerConfig.evaluatorImageName
     author = 'jiayu1011'
 
     # sh evaluator.sh // start running evaluator!
@@ -120,14 +134,11 @@ def DockerfileTemplate(evaluationId, codeFileName, codeFilePath, codeLanguage, l
     # $3 - codeLanguage // C++
     template = 'FROM {}\n'.format(baseImageName) + \
                'MAINTAINER {}\n'.format(author) + \
-               'ADD {} {}\n'.format(codeFileName, destPath) + \
-               'ADD {} {}\n'.format(scriptFilePathSrc, destPath) + \
-               'CMD python {} {} {} {}'.format(
-                   scriptFilePathDst,
-                   evaluationId,
-                   codeFileName,
-                   codeLanguage
-               )
+               f'ADD {codeFileName} {destPath}\n' + \
+               f'ADD {problemId}_stdInput.txt {destPath}\n' + \
+               f'ADD {problemId}_stdOutput.txt {destPath}\n' + \
+               f'ADD {"DockerScript"} {destPath}/{"DockerScript"}\n' + \
+               f'CMD python {startScriptFilePath} {evaluationId} {problemId} {codeFileName} {codeLanguage}'
 
 
     return template

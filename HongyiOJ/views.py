@@ -17,13 +17,13 @@ import re
 from django.core.mail import send_mail
 from HongyiOJ_backend import settings
 from HongyiOJ_evaluator.DockerConfig import docker
-from HongyiOJ_evaluator.DockerScript import analyze
+
+
 
 verifyDict = {}
 
 
 def test(request):
-    print(request)
     if request.method == 'GET':
         return HttpResponse('Welcome to Hongyi OJ!')
     else:
@@ -43,14 +43,14 @@ def login(request):
     :param request:
     :return:
     """
-    print(request)
+    #print(request)
     res = {}
     if not request.method == 'POST':
         return MyResponse.methodWrongRes
     if not request.POST:
         return MyResponse.formEmptyRes
 
-    print(request.POST)
+    #print(request.POST)
     if not User.objects.filter(username=request.POST['username']).exists():
         res['isOk'] = False
         res['errMsg'] = '用户不存在'
@@ -82,13 +82,13 @@ def register(request):
     :param request:
     :return:
     """
-    print(request)
+    #print(request)
     res = {}
     if not request.method == 'POST':
         return MyResponse.methodWrongRes
     if not request.POST:
         return MyResponse.formEmptyRes
-    print(request.POST)
+    #print(request.POST)
     POST_dict = request.POST.dict()
 
     if User.objects.filter(username=POST_dict['username']).exists():
@@ -120,7 +120,7 @@ def getVerifyCode(request):
     :param request:
     :return:
     """
-    print(request)
+    #print(request)
     res = {}
     if not request.method == 'GET':
         return MyResponse.methodWrongRes
@@ -159,7 +159,7 @@ def verify(request):
     :param request:
     :return:
     """
-    print(request)
+    #print(request)
     res = {}
     if not request.method == "POST":
         return MyResponse.methodWrongRes
@@ -167,7 +167,7 @@ def verify(request):
         return MyResponse.formEmptyRes
 
     global verifyDict
-    print(verifyDict)
+    #print(verifyDict)
     if request.POST['email'] not in verifyDict:
         res['isOk'] = False
         res['errMsg'] = '邮箱错误'
@@ -185,7 +185,7 @@ def verify(request):
 
 
 def resetPassword(request):
-    print(request)
+    #print(request)
     res = {}
     if not request.method == 'PUT':
         return MyResponse.methodWrongRes
@@ -211,7 +211,7 @@ def logout(request):
     PUT {username}
     :return:
     """
-    print(request)
+    #print(request)
     res = {}
     if not request.method == 'PUT':
         return MyResponse.methodWrongRes
@@ -246,7 +246,7 @@ def getProblemList(request):
     problemList: Array
     resultSum: Int
     """
-    print(request)
+    #print(request)
     res = {}
     if not request.method == 'GET':
         return MyResponse.methodWrongRes
@@ -359,7 +359,7 @@ def uploadProblem(request):
         errMsg: ''
     }
     """
-    print(request)
+    #print(request)
     res = {}
     if not request.method == 'POST':
         return MyResponse.methodWrongRes
@@ -396,7 +396,7 @@ def reviewProblem(request):
     PUT {problemId, reviewStatus}
     :return:
     """
-    print(request)
+    #print(request)
     res = {}
     if not request.method == 'PUT':
         return MyResponse.methodWrongRes
@@ -417,7 +417,7 @@ def deleteProblem(request):
     :param request:
     :return:
     """
-    print(request)
+    #print(request)
     res = {}
     if not request.method == 'DELETE':
         return MyResponse.methodWrongRes
@@ -448,7 +448,6 @@ def submitCode(request):
     :param request: {author, relatedProblemId, codeLanguage, code}
     :return:
     """
-    print(request)
     res = {}
     if request.method != 'POST':
         return MyResponse.methodWrongRes
@@ -484,13 +483,30 @@ def submitCode(request):
         'memoryLimit': Problem.objects.get(problemId=rPId).memoryLimit
     }
 
-    dockerOutputFilePath = docker.PrepareDocker(eId, limitations)
-    standardOutputFilePath = ''
-    analyze.outputAnalyze(standardOutputFilePath, dockerOutputFilePath)
+    stdInputTxt = Problem.objects.get(problemId=rPId).stdInput
+    stdOutputTxt = Problem.objects.get(problemId=rPId).stdOutput
 
 
+    """
+    *Run Docker!
+    """
+    dockerOutputFilePath = docker.runDocker(evaluationId=eId, problemId=rPId, stdInputTxt=stdInputTxt, stdOutputTxt=stdOutputTxt, limitations=limitations)
 
+    resDict = getAnalyzeResult(dockerOutputFilePath)
 
+    if 'errLog' in resDict:
+        Evaluation.objects.filter(evaluationId=eId) \
+            .update(
+                result=resDict['result'],
+                errLog=resDict['errLog']
+            )
+    else:
+        Evaluation.objects.filter(evaluationId=eId)\
+            .update(
+                result=resDict['result'],
+                timeCost=resDict['timeCost'],
+                memoryCost=resDict['memoryCost']
+            )
 
 
 
@@ -505,7 +521,7 @@ def getEvaluationList(request):
     :param request:
     :return:
     """
-    print(request)
+    # #print(request)
     res = {}
     eva = Evaluation.objects.all()
     if request.method != 'GET':

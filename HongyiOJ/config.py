@@ -3,6 +3,7 @@ Config
 """
 
 class Config:
+    rootPath = '/HongyiOJ'
     codeSuffixDic = {
         'C': '.c',
         'C++': '.cpp',
@@ -10,13 +11,17 @@ class Config:
         'Java': '.java'
     }
     # Position where recent code is stored
-    codeSubmitStorePath = '/HongyiOJ/HongyiOJ_backend/HongyiOJ_evaluator/Evaluation/SubmitCode'
+    codeSubmitStorePath = '{}/HongyiOJ_backend/HongyiOJ_evaluator/Evaluation/SubmitCode'.format(rootPath)
     # Code Storage Limit
     codeAmount = 500
     # Position where recent docker is prepared
-    dockerPreparedPath = '/HongyiOJ/HongyiOJ_backend/HongyiOJ_evaluator/Evaluation/DockerTemp'
-    dockerScriptPath = '/HongyiOJ/HongyiOJ_backend/HongyiOJ_evaluator/DockerScript/script.py'
+    dockerPreparedPath = f'{rootPath}/HongyiOJ_backend/HongyiOJ_evaluator/Evaluation/DockerTemp'
+    dockerScriptFolderPath = '{}/HongyiOJ_backend/HongyiOJ_evaluator/DockerScript'.format(rootPath)
+    outputFolderName = 'output'
+    analyzeResFileName = 'analyze_result.txt'
 
+
+    separator = '##'
 
 
     # Evaluation result types(7 types)
@@ -29,6 +34,8 @@ class Config:
     WRONG_ANSWER = 'Wrong Answer'
 
 
+    def __init__(self):
+        return
 
 
 
