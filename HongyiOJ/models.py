@@ -82,8 +82,8 @@ class Evaluation(models.Model):
     -----
     'Queuing'
     'Accepted' 
-    'Time Limit Exceed' 
-    'Memory Limit Exceed' 
+    'Time Limit Exceeded' 
+    'Memory Limit Exceeded' 
     'Compile Error'
     'Runtime Error' 
     'Presentation Error'

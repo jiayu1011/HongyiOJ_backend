@@ -91,26 +91,16 @@ def getAnalyzeResult(resultFilePath) -> dict:
     with open(f'{resultFilePath}/{HostConfig.Config.analyzeResFileName}', 'r') as f:
         resArr = f.readlines()
     resDict = {}
-    if len(resArr) < 3:
+    if len(resArr) < 7:
         return resDict
 
-    resDict['result'] = resArr[0].strip()
-    if resDict['result'] in [
-        HostConfig.Config.COMPILE_ERROR,
-        HostConfig.Config.RUNTIME_ERROR
-    ]:
-        resDict['errLog'] = ''.join(resArr[1:])
-        return resDict
-
-    resDict['timeCost'] = resArr[1].strip()
-    resDict['memoryCost'] = resArr[2].strip()
-
-    if resDict['result']==HostConfig.Config.WRONG_ANSWER:
-        if len(resArr) < 6:
-            return resDict
-        resDict['stdInputCase'] = resArr[3].strip()
-        resDict['stdOutputCase'] = resArr[4].strip()
-        resDict['dockerOutputCase'] = resArr[5].strip()
+    resDict['result'] = resArr[0].split(':')[-1].strip()
+    resDict['timeCost'] = resArr[1].split(':')[-1].strip()
+    resDict['memoryCost'] = resArr[2].split(':')[-1].strip()
+    resDict['stdInputCase'] = resArr[3].split(':')[-1].strip()
+    resDict['stdOutputCase'] = resArr[4].split(':')[-1].strip()
+    resDict['dockerOutputCase'] = resArr[5].split(':')[-1].strip()
+    resDict['errLog'] = ''.join(resArr[6].split(':')[1:])
 
 
     return resDict

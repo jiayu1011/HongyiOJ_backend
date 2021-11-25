@@ -1,8 +1,14 @@
 import os
 import sys
 import DockerConfig
+import HostConfig
 import utils
 import analyze
+import psutil
+import monitor
+import subprocess
+import time
+
 
 
 def separateInput(src, dst):
@@ -28,30 +34,206 @@ def separateInput(src, dst):
             f.write(item)
 
 
-def handleC(codeFilePath, compileOutput, inputFilePath, outputFilePath, CEFilePath, REFilePath, pIdFilePath):
+def handleC(
+        codeFilePath,
+        compileOutput,
+        inputFile,
+        outputFile,
+        CEFile,
+        REFile,
+        timeLimit,
+        memoryLimit
+):
     # Ignore all warnings during compiling
-    os.system(f"gcc {codeFilePath} -w -o {compileOutput} 2>> {CEFilePath}")
-    os.system(f"./{compileOutput} < {inputFilePath} 1>> {outputFilePath} 2>> {REFilePath} && echo $! >> {pIdFilePath}")
+
+
+    # os.system(f"gcc {codeFilePath} -w -o {compileOutput} 2>> {CEFile}")
+    # os.system(f"./{compileOutput} < {inputFile} 1>> {outputFile} 2>> {REFile}")
+
+    """
+    Using psutil.Popen in order to monitor process status
+    """
+    compileProcess = subprocess.Popen(
+        [
+            'gcc',
+            codeFilePath,
+            '-w',
+            '-o',
+            compileOutput
+        ],
+        stderr=CEFile
+    )
+    compileProcess.wait()
+
+    try:
+        execProcess = subprocess.Popen(
+            [
+                f'./{compileOutput}'
+            ],
+            stdin=inputFile,
+            stdout=outputFile,
+            stderr=REFile
+        )
+    except IOError:
+        return '', 0, 0, 0
+    else:
+        print(f'execProcess\'s pid:{execProcess.pid}')
+        status, timeCost, memoryCost = monitor.monitor(
+            process=execProcess,
+            timeLimit=timeLimit,
+            memoryLimit=memoryLimit,
+        )
+
+        return status, timeCost, memoryCost, execProcess.returncode
 
 
 
-def handleCpp(codeFilePath, compileOutput, inputFilePath, outputFilePath, CEFilePath, REFilePath, pIdFilePath):
+
+
+
+def handleCpp(
+        codeFilePath,
+        compileOutput,
+        inputFile,
+        outputFile,
+        CEFile,
+        REFile,
+        timeLimit,
+        memoryLimit
+):
     # Ignore all warnings during compiling
-    os.system(f"g++ {codeFilePath} -w -o {compileOutput} 2>> {CEFilePath}")
-    os.system(f"./{compileOutput} < {inputFilePath} 1>> {outputFilePath} 2>> {REFilePath} && echo $! >> {pIdFilePath}")
+    # os.system(f"g++ {codeFilePath} -w -o {compileOutput} 2>> {CEFile}")
+    # os.system(f"./{compileOutput} < {inputFile} 1>> {outputFile} 2>> {REFile}")
+
+    compileProcess = subprocess.Popen(
+        [
+            'g++',
+            codeFilePath,
+            '-w',
+            '-o',
+            compileOutput
+        ],
+        stderr=CEFile
+    )
+    compileProcess.wait()
 
 
-def handlePy3(codeFilePath, inputFilePath, outputFilePath, REFilePath, pIdFilePath):
-    os.system(f"python {codeFilePath} < {inputFilePath} 1>> {outputFilePath} 2>> {REFilePath} && echo $! >> {pIdFilePath}")
+    try:
+        execProcess = subprocess.Popen(
+            [
+                f'./{compileOutput}'
+            ],
+            stdin=inputFile,
+            stdout=outputFile,
+            stderr=REFile
+        )
+    except IOError:
+        return '', 0, 0, 0
+    else:
+        print(f'execProcess\'s pid:{execProcess.pid}')
+        status, timeCost, memoryCost = monitor.monitor(
+            process=execProcess,
+            timeLimit=timeLimit,
+            memoryLimit=memoryLimit,
+        )
+        print(execProcess.returncode)
 
 
-def handleJava(codeFilePath, javaMainClass, inputFilePath, outputFilePath, CEFilePath, REFilePath, pIdFilePath):
+
+        return status, timeCost, memoryCost, execProcess.returncode
+
+
+
+def handlePy3(
+        codeFilePath,
+        inputFile,
+        outputFile,
+        REFile,
+        timeLimit,
+        memoryLimit
+):
+    # os.system(f"python {codeFilePath} < {inputFile} 1>> {outputFile} 2>> {REFile}")
+    execProcess = subprocess.Popen(
+        [
+            'python',
+            codeFilePath
+        ],
+        stdin=inputFile,
+        stdout=outputFile,
+        stderr=REFile
+    )
+    print(f'execProcess\'s pid:{execProcess.pid}')
+
+    status, timeCost, memoryCost = monitor.monitor(
+        process=execProcess,
+        timeLimit=timeLimit,
+        memoryLimit=memoryLimit,
+    )
+
+
+    return status, timeCost, memoryCost, execProcess.returncode
+
+
+
+def handleJava(
+        codeFilePath,
+        javaMainClass,
+        inputFile,
+        outputFile,
+        CEFile,
+        REFile,
+        timeLimit,
+        memoryLimit
+):
     codeFileName = codeFilePath.split('/')[-1]
     if os.path.exists(codeFileName):
         # Rename to Main.java in order to prevent Compile Error
-        os.system('rename {} {}.java {}'.format(codeFileName, javaMainClass, codeFileName))
-    os.system(f'javac {javaMainClass}.java 2>> {CEFilePath}')
-    os.system(f"java {javaMainClass} < {inputFilePath} 1>> {outputFilePath} 2>> {REFilePath} && echo $! >> {pIdFilePath}")
+        renameProcess = subprocess.Popen(
+            [
+                'rename',
+                codeFileName,
+                f'{javaMainClass}.java',
+                codeFileName
+            ]
+        )
+        renameProcess.wait()
+        # print(os.listdir(os.getcwd()))
+        # os.system(f'rename {codeFileName} {javaMainClass}.java {codeFileName}')
+
+
+    # os.system(f'javac {javaMainClass}.java 2>> {CEFile}')
+    # os.system(f"java {javaMainClass} < {inputFile} 1>> {outputFile} 2>> {REFile}")
+
+    compileProcess = subprocess.Popen(
+        [
+            'javac',
+            f'{javaMainClass}.java'
+        ],
+        stderr=CEFile
+    )
+    compileProcess.wait()
+    try:
+        execProcess = subprocess.Popen(
+            [
+                'java',
+                javaMainClass
+            ],
+            stdin=inputFile,
+            stdout=outputFile,
+            stderr=REFile
+        )
+    except IOError:
+        return '', 0, 0, 0
+    else:
+        print(f'execProcess\'s pid:{execProcess.pid}')
+
+        status, timeCost, memoryCost = monitor.monitor(
+            process=execProcess,
+            timeLimit=timeLimit,
+            memoryLimit=memoryLimit
+        )
+
+        return status, timeCost, memoryCost, execProcess.returncode
 
 
 
@@ -66,8 +248,16 @@ if __name__=='__main__':
     problemId = args[2]     # P10001
     codeFileName = args[3]  # E10001_code.java
     codeLanguage = args[4]  # Java
+    timeLimit = float(args[5])     # 1000
+    memoryLimit = float(args[6])   # 125
 
-    dockerConfig = DockerConfig.Config(evaluationId=evaluationId, problemId=problemId)
+    dockerConfig = DockerConfig.Config(
+        evaluationId=evaluationId,
+        problemId=problemId,
+        timeLimit=timeLimit,
+        memoryLimit=memoryLimit
+    )
+
 
 
     inputSrc = dockerConfig.stdInputFilePath
@@ -84,64 +274,117 @@ if __name__=='__main__':
 
     os.chdir(dockerConfig.rootPath)
 
+    print('--------------------------------')
+    print('--------start running!----------')
+    print('--------------------------------')
 
 
     """
     Feeding Input Groups
     """
     # Test through all input cases and add result and err(if exist)
-    # to "${evaluationId}_output.txt" and "error_log.txt"
+    # to "${evaluationId}_output.txt" and
+    # "compile_error_log.txt, runtime_error_log.txt"
     inputCases = os.listdir(inputDst)
     cnt = 1
+    status = ''
+    timeCost = 0
+    memoryCost = 0
+    maxTimeCost = 0
+    maxMemoryCost = 0
+    returnCode = 0
+
     for i in range(len(inputCases)):
         index = i+1
+        print(f'input{index} start...')
         curInputCase = f'input_{index}.txt'
-        # Needs compile
-        if codeLanguage == 'C':
-            handleC(
-                codeFilePath='{}/{}'.format(dockerConfig.rootPath, codeFileName),
-                compileOutput=dockerConfig.compileOutputFileName,
-                inputFilePath="{}/{}".format(dockerConfig.inputCasesFolderPath, curInputCase),
-                outputFilePath=dockerConfig.dockerOutputFilePath,
-                CEFilePath=dockerConfig.CEFilePath,
-                REFilePath=dockerConfig.REFilePath,
-                pIdFilePath=dockerConfig.pIdFilePath
-            )
+
+        inputFilePath = f'{dockerConfig.inputCasesFolderPath}/{curInputCase}'
+        outputFilePath = dockerConfig.dockerOutputFilePath
+
+
+        stdInputFile = open(inputFilePath, 'r')
+        outputFile = open(outputFilePath, 'a')
+        CEFile = open(dockerConfig.CEFilePath, 'a')
+        REFile = open(dockerConfig.REFilePath, 'a')
+
 
         # Needs compile
-        elif codeLanguage == 'C++':
-            handleCpp(
-                codeFilePath='{}/{}'.format(dockerConfig.rootPath, codeFileName),
+        if codeLanguage == HostConfig.CodeLanguageType.C:
+            status, timeCost, memoryCost, returnCode = handleC(
+                codeFilePath=f'{dockerConfig.rootPath}/{codeFileName}',
                 compileOutput=dockerConfig.compileOutputFileName,
-                inputFilePath="{}/{}".format(dockerConfig.inputCasesFolderPath, curInputCase),
-                outputFilePath=dockerConfig.dockerOutputFilePath,
-                CEFilePath=dockerConfig.CEFilePath,
-                REFilePath=dockerConfig.REFilePath,
-                pIdFilePath=dockerConfig.pIdFilePath
+                inputFile=stdInputFile,
+                outputFile=outputFile,
+                CEFile=CEFile,
+                REFile=REFile,
+                timeLimit=timeLimit,
+                memoryLimit=memoryLimit
             )
 
-        elif codeLanguage == 'Python3':
-            handlePy3(
-                codeFilePath='{}/{}'.format(dockerConfig.rootPath, codeFileName),
-                inputFilePath="{}/{}".format(dockerConfig.inputCasesFolderPath, curInputCase),
-                outputFilePath=dockerConfig.dockerOutputFilePath,
-                REFilePath=dockerConfig.REFilePath,
-                pIdFilePath=dockerConfig.pIdFilePath
+        # Needs compile
+        elif codeLanguage == HostConfig.CodeLanguageType.C_PRIMER_PLUS:
+            status, timeCost, memoryCost, returnCode = handleCpp(
+                codeFilePath=f'{dockerConfig.rootPath}/{codeFileName}',
+                compileOutput=dockerConfig.compileOutputFileName,
+                inputFile=stdInputFile,
+                outputFile=outputFile,
+                CEFile=CEFile,
+                REFile=REFile,
+                timeLimit=timeLimit,
+                memoryLimit=memoryLimit
             )
 
-        elif codeLanguage == 'Java':
-            print('handling java...')
+        elif codeLanguage == HostConfig.CodeLanguageType.PYTHON3:
+            status, timeCost, memoryCost, returnCode = handlePy3(
+                codeFilePath=f'{dockerConfig.rootPath}/{codeFileName}',
+                inputFile=stdInputFile,
+                outputFile=outputFile,
+                REFile=REFile,
+                timeLimit=timeLimit,
+                memoryLimit=memoryLimit
+            )
 
-            handleJava(
-                codeFilePath='{}/{}'.format(dockerConfig.rootPath, codeFileName),
+        elif codeLanguage == HostConfig.CodeLanguageType.JAVA:
+            # print('handling java...')
+
+            status, timeCost, memoryCost, returnCode = handleJava(
+                codeFilePath=f'{dockerConfig.rootPath}/{codeFileName}',
                 javaMainClass=dockerConfig.javaMainClass,
-                inputFilePath="{}/{}".format(dockerConfig.inputCasesFolderPath, curInputCase),
-                outputFilePath=dockerConfig.dockerOutputFilePath,
-                CEFilePath=dockerConfig.CEFilePath,
-                REFilePath=dockerConfig.REFilePath,
-                pIdFilePath=dockerConfig.pIdFilePath
+                inputFile=stdInputFile,
+                outputFile=outputFile,
+                CEFile=CEFile,
+                REFile=REFile,
+                timeLimit=timeLimit,
+                memoryLimit=memoryLimit
             )
 
+        stdInputFile.close()
+        outputFile.close()
+        CEFile.close()
+        REFile.close()
+
+        if status in HostConfig.ProcessStatus.abnormalStatus:
+            break
+
+        # Record max usage of CPU time and memory
+        maxTimeCost = max(maxTimeCost, timeCost)
+        maxMemoryCost = max(maxMemoryCost, memoryCost)
+
+        realReturnCode = -returnCode
+        #
+        if realReturnCode in HostConfig.Config.processTerminatedExitCode2SignalDict:
+            with open(dockerConfig.REFilePath, 'a') as f:
+                f.write(HostConfig.Config.processTerminatedExitCode2SignalDict[realReturnCode])
+
+        # Check whether an error has happened
+        errType, errLog = utils.checkCodeErr(
+            codeLanguage=codeLanguage,
+            CEFilePath=dockerConfig.CEFilePath,
+            REFilePath=dockerConfig.REFilePath
+        )
+        if errType:
+            break
 
 
 
@@ -155,15 +398,15 @@ if __name__=='__main__':
             os.system(f'echo -e "\n##" >> {dockerConfig.dockerOutputFilePath}')
             cnt += 1
 
-        errType, errLog = utils.checkErr(
-            CEFilePath=dockerConfig.CEFilePath,
-            REFilePath=dockerConfig.REFilePath
-        )
-        if errType:
-            break
+
+        print(f'input{index} complete...')
 
 
-    print('------running complete!------------')
+
+
+    print('--------------------------------')
+    print('-------running complete!--------')
+    print('--------------------------------')
 
 
 
@@ -171,31 +414,28 @@ if __name__=='__main__':
     Result Analyzing
     """
     result, wrongCase, errLog = analyze.outputAnalyze(
+        codeLanguage=codeLanguage,
         stdInputFilePath=dockerConfig.stdInputFilePath,
         stdOutputFilePath=dockerConfig.stdOutputFilePath,
         targetOutputFilePath=dockerConfig.dockerOutputFilePath,
         CEFilePath=dockerConfig.CEFilePath,
-        REFilePath=dockerConfig.REFilePath
+        REFilePath=dockerConfig.REFilePath,
+        status=status
     )
 
 
 
-    timeCost = 0
-    memoryCost = 0
 
     with open(dockerConfig.analyzeResFilePath, 'w') as f:
-        f.write(f'{result}\n')
-        if errLog:
-            f.write(f'{errLog}')
-        else:
-            f.write(f'{timeCost}\n')
-            f.write(f'{memoryCost}')
+        f.write(f'result: {result}\n')
+        f.write(f'timeCost: {maxTimeCost}\n')
+        f.write(f'memoryCost: {maxMemoryCost}\n')
+        f.write(f'stdInputCase: {wrongCase["stdInputCase"]}\n')
+        f.write(f'stdOutputCase: {wrongCase["stdOutputCase"]}\n')
+        f.write(f'dockerOutputCase: {wrongCase["dockerOutputCase"]}\n')
+        f.write(f'errLog: {errLog}\n')
 
-            if wrongCase:
-                f.write('\n')
-                f.write(f'{wrongCase["stdInputCase"]}\n')
-                f.write(f'{wrongCase["stdOutputCase"]}\n')
-                f.write(f'{wrongCase["dockerOutputCase"]}')
+
 
 
 

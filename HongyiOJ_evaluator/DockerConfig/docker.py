@@ -8,9 +8,21 @@ import HongyiOJ_evaluator.DockerConfig.config as DockerConfig
 from HongyiOJ.utils import *
 
 
-def runDocker(evaluationId, problemId, stdInputTxt, stdOutputTxt, limitations) -> str:
+def runDocker(
+        evaluationId,
+        problemId,
+        stdInputTxt,
+        stdOutputTxt,
+        timeLimit,
+        memoryLimit
+) -> str:
     hostConfig = HostConfig.Config()
-    dockerConfig = DockerConfig.Config(evaluationId=evaluationId, problemId=problemId)
+    dockerConfig = DockerConfig.Config(
+        evaluationId=evaluationId,
+        problemId=problemId,
+        timeLimit=timeLimit,
+        memoryLimit=memoryLimit
+    )
 
     os.chdir(hostConfig.dockerPreparedPath)
     os.mkdir(evaluationId)
@@ -54,7 +66,8 @@ def runDocker(evaluationId, problemId, stdInputTxt, stdOutputTxt, limitations) -
                 codeFileName=codeFileName,
                 codeFilePath=codeFilePath,
                 codeLanguage=codeLanguage,
-                limitations=limitations
+                timeLimit=timeLimit,
+                memoryLimit=memoryLimit
             )
         )
 
@@ -70,7 +83,9 @@ def runDocker(evaluationId, problemId, stdInputTxt, stdOutputTxt, limitations) -
 
     # Run container && destroy container
     containerName = evaluationId
-    os.system('docker run --name={} -it {}'.format(containerName, imageName))
+    os.system(
+        f'docker run --name={containerName} -m {dockerConfig.perContainerMemoryUsageLimit}  {imageName}'
+    )
 
     # Entering docker bash
     # Analyzing && Running!
@@ -88,8 +103,8 @@ def runDocker(evaluationId, problemId, stdInputTxt, stdOutputTxt, limitations) -
     SRC_PATH = outputFolderPath
     DEST_PATH = f'{hostConfig.dockerPreparedPath}/{evaluationId}'
     os.system('docker cp {}:{} {}'.format(containerName, SRC_PATH, DEST_PATH))
-    #
-    # # Delete container and image after all
+
+    # Delete container and image after all
     os.system('docker rm {}'.format(containerName))
     os.system('docker rmi {}'.format(imageName))
 
@@ -108,19 +123,34 @@ def runDocker(evaluationId, problemId, stdInputTxt, stdOutputTxt, limitations) -
     return evaluationOutputFolderPath
 
 
-def DockerfileTemplate(evaluationId, problemId, codeFileName, codeFilePath, codeLanguage, limitations) -> str:
+def DockerfileTemplate(
+        evaluationId,
+        problemId,
+        codeFileName,
+        codeFilePath,
+        codeLanguage,
+        timeLimit,
+        memoryLimit
+) -> str:
     """
 
+    :param memoryLimit:
+    :param timeLimit:
     :param evaluationId:
     :param problemId:
     :param codeFileName:
     :param codeFilePath:
     :param codeLanguage:
-    :param limitations:
+
     :return:
     """
     hostConfig = HostConfig.Config()
-    dockerConfig = DockerConfig.Config(evaluationId=evaluationId, problemId=problemId)
+    dockerConfig = DockerConfig.Config(
+        evaluationId=evaluationId,
+        problemId=problemId,
+        timeLimit=timeLimit,
+        memoryLimit=memoryLimit
+    )
 
     scriptFolderPathSrc = hostConfig.dockerScriptFolderPath
     startScriptFilePath = '{}/{}'.format(dockerConfig.scriptFolderPath, 'script.py')
@@ -137,8 +167,9 @@ def DockerfileTemplate(evaluationId, problemId, codeFileName, codeFilePath, code
                f'ADD {codeFileName} {destPath}\n' + \
                f'ADD {problemId}_stdInput.txt {destPath}\n' + \
                f'ADD {problemId}_stdOutput.txt {destPath}\n' + \
-               f'ADD {"DockerScript"} {destPath}/{"DockerScript"}\n' + \
-               f'CMD python {startScriptFilePath} {evaluationId} {problemId} {codeFileName} {codeLanguage}'
+               f'ADD {"DockerScript"} {destPath}/{"DockerScript"}\n' +\
+               f'CMD python {startScriptFilePath} {evaluationId} {problemId} {codeFileName} {codeLanguage} {timeLimit} {memoryLimit}'
+
 
 
     return template

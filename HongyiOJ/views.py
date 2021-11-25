@@ -478,10 +478,9 @@ def submitCode(request):
     #     f.writelines(POST_dict['code'])
 
     # Docker preparation
-    limitations = {
-        'timeLimit': Problem.objects.get(problemId=rPId).timeLimit,
-        'memoryLimit': Problem.objects.get(problemId=rPId).memoryLimit
-    }
+    timeLimit = float(Problem.objects.get(problemId=rPId).timeLimit)
+    memoryLimit = float(Problem.objects.get(problemId=rPId).memoryLimit)
+
 
     stdInputTxt = Problem.objects.get(problemId=rPId).stdInput
     stdOutputTxt = Problem.objects.get(problemId=rPId).stdOutput
@@ -490,20 +489,35 @@ def submitCode(request):
     """
     *Run Docker!
     """
-    dockerOutputFilePath = docker.runDocker(evaluationId=eId, problemId=rPId, stdInputTxt=stdInputTxt, stdOutputTxt=stdOutputTxt, limitations=limitations)
+    dockerOutputFilePath = docker.runDocker(
+        evaluationId=eId,
+        problemId=rPId,
+        stdInputTxt=stdInputTxt,
+        stdOutputTxt=stdOutputTxt,
+        timeLimit=timeLimit,
+        memoryLimit=memoryLimit
+    )
 
     resDict = getAnalyzeResult(dockerOutputFilePath)
 
-    if 'errLog' in resDict:
+    Evaluation.objects.filter(evaluationId=eId).update(result=resDict['result'])
+
+    # TLE, MLE happened
+    if resDict['result'] in HostConfig.ProcessStatus.abnormalStatus:
+        return MyResponse.defaultRes
+
+    # CE, RE happened
+    if resDict['result'] in [
+        HostConfig.ResultType.COMPILE_ERROR,
+        HostConfig.ResultType.RUNTIME_ERROR
+    ]:
         Evaluation.objects.filter(evaluationId=eId) \
             .update(
-                result=resDict['result'],
                 errLog=resDict['errLog']
             )
     else:
         Evaluation.objects.filter(evaluationId=eId)\
             .update(
-                result=resDict['result'],
                 timeCost=resDict['timeCost'],
                 memoryCost=resDict['memoryCost']
             )
@@ -564,6 +578,7 @@ def getEvaluationList(request):
                 item[key] = item[key].strftime('%Y-%m-%d %H:%M:%S')
 
     res['evaluationList'] = evaList
+    res['total'] = totalNum
     res['isOk'] = True
     res['errMsg'] = ''
 

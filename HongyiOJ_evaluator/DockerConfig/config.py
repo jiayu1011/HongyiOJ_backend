@@ -6,7 +6,7 @@ Inside Docker Container
 
 class Config:
     rootPath = '/Temp'
-    evaluatorImageName = 'hongyioj_evaluator:v1'
+    evaluatorImageName = 'hongyioj_evaluator:v2'
     scriptFolderPath = '{}/DockerScript'.format(rootPath)
     inputCasesFolderPath = '{}/input_cases'.format(rootPath)
     outputFolderPath = f'{rootPath}/output'
@@ -21,11 +21,28 @@ class Config:
     pIdFileName = 'pid.txt'
     pIdFilePath = '{}/{}'.format(rootPath, pIdFileName)
 
-    def __init__(self, evaluationId, problemId):
+
+    perContainerMemoryUsageLimit = '500m'
+
+
+
+
+    def __init__(
+            self,
+            evaluationId,
+            problemId,
+            timeLimit,
+            memoryLimit
+    ):
         self.stdInputFilePath = '{}/{}_stdInput.txt'.format(self.rootPath, problemId)
         self.stdOutputFilePath = '{}/{}_stdOutput.txt'.format(self.rootPath, problemId)
         self.dockerOutputFileName = "{}_output.txt".format(evaluationId)
         self.dockerOutputFilePath = '{}/{}'.format(self.outputFolderPath, self.dockerOutputFileName)
+        self.timeLimit = timeLimit
+        self.memoryLimit = memoryLimit
+
+
+
 
 
 

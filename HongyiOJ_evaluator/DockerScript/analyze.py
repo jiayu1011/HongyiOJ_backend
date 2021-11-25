@@ -1,10 +1,20 @@
 import HostConfig
 import utils
 
-def outputAnalyze(stdInputFilePath, stdOutputFilePath, targetOutputFilePath, CEFilePath, REFilePath):
+def outputAnalyze(
+        codeLanguage,
+        stdInputFilePath,
+        stdOutputFilePath,
+        targetOutputFilePath,
+        CEFilePath,
+        REFilePath,
+        status
+):
     """
     evaluate the output file
 
+
+    :param status:
     :param REFilePath:
     :param CEFilePath:
     :param stdInputFilePath:
@@ -12,15 +22,34 @@ def outputAnalyze(stdInputFilePath, stdOutputFilePath, targetOutputFilePath, CEF
     :param targetOutputFilePath:
     :return:
     """
-    wrongCase = {}
+    wrongCase = {
+        'stdInputCase': '',
+        'stdOutputCase': '',
+        'dockerOutputCase': ''
+    }
+
+
 
 
     # Compile Error & Runtime Error Judge
-    errType, errLog = utils.checkErr(CEFilePath=CEFilePath, REFilePath=REFilePath)
+    errType, errLog = utils.checkCodeErr(
+        codeLanguage=codeLanguage,
+        CEFilePath=CEFilePath,
+        REFilePath=REFilePath
+    )
+
+    # Check whether process has normally exited(TLE, MLE)
+    if status in HostConfig.ProcessStatus.abnormalStatus:
+        if status == HostConfig.ProcessStatus.TIME_LIMIT_EXCEEDED:
+            return HostConfig.ResultType.TIME_LIMIT_EXCEEDED, wrongCase, errLog
+        elif status == HostConfig.ProcessStatus.MEMORY_LIMIT_EXCEEDED:
+            return HostConfig.ResultType.MEMORY_LIMIT_EXCEEDED, wrongCase, errLog
+
+    # Check CE, RE
     if errType:
-        if errType==HostConfig.Config.COMPILE_ERROR:
+        if errType==HostConfig.ResultType.COMPILE_ERROR:
             return errType, wrongCase, errLog
-        elif errType==HostConfig.Config.RUNTIME_ERROR:
+        elif errType==HostConfig.ResultType.RUNTIME_ERROR:
             return errType, wrongCase, errLog
 
 
@@ -34,14 +63,14 @@ def outputAnalyze(stdInputFilePath, stdOutputFilePath, targetOutputFilePath, CEF
         stdInputTxt = f.read()
 
     if dockerOutputTxt == stdOutputTxt:
-        return HostConfig.Config.ACCEPTED, wrongCase, errLog
+        return HostConfig.ResultType.ACCEPTED, wrongCase, errLog
 
     dockerOutputArr = dockerOutputTxt.split()
     stdOutputArr = stdOutputTxt.split()
     stdInputArr = stdInputTxt.split()
 
     if len(stdOutputArr) != len(dockerOutputArr):
-        return HostConfig.Config.WRONG_ANSWER, wrongCase, errLog
+        return HostConfig.ResultType.WRONG_ANSWER, wrongCase, errLog
 
 
 
@@ -53,9 +82,9 @@ def outputAnalyze(stdInputFilePath, stdOutputFilePath, targetOutputFilePath, CEF
                 'stdOutputCase': stdOutputArr[index],
                 'dockerOutputCase': dockerOutputArr[index]
             }
-            return HostConfig.Config.WRONG_ANSWER, wrongCase, errLog
+            return HostConfig.ResultType.WRONG_ANSWER, wrongCase, errLog
 
-    return HostConfig.Config.PRESENTATION_ERROR, wrongCase, errLog
+    return HostConfig.ResultType.PRESENTATION_ERROR, wrongCase, errLog
 
 
 if __name__=='__main__':
