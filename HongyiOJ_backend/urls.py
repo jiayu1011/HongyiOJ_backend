@@ -24,17 +24,17 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # User related APIs
-    path('{}/'.format(basicUrl), views.test),
-    path('{}/login'.format(basicUrl), views.login),
-    path('{}/register'.format(basicUrl), views.register),
-    path('{}/reset/password'.format(basicUrl), views.resetPassword),
-    path('{}/logout'.format(basicUrl), views.logout),
-    path('{}/verify/code'.format(basicUrl), views.getVerifyCode),
-    path('{}/verify'.format(basicUrl), views.verify),
+    path(f'{basicUrl}/', views.test),
+    path(f'{basicUrl}/login', views.login),
+    path(f'{basicUrl}/register', views.register),
+    path(f'{basicUrl}/reset/password', views.resetPassword),
+    path(f'{basicUrl}/logout', views.logout),
+    path(f'{basicUrl}/verify/code', views.getVerifyCode),
+    path(f'{basicUrl}/verify', views.verify),
 
     # Problem related APIs
-    path('{}/list/problem'.format(basicUrl), views.getProblemList),
-    path('{}/upload/problem'.format(basicUrl), views.uploadProblem),
+    path(f'{basicUrl}/list/problem', views.getProblemList),
+    path(f'{basicUrl}/upload/problem', views.uploadProblem),
 
 
 
@@ -44,12 +44,12 @@ urlpatterns = [
     # Discussion related APIs
 
     # Evaluation related APIs
-    path('{}/submit/code'.format(basicUrl), views.submitCode),
-    path('{}/list/evaluation'.format(basicUrl), views.getEvaluationList),
+    path(f'{basicUrl}/submit/code', views.submitCode),
+    path(f'{basicUrl}/list/evaluation', views.getEvaluationList),
 
     # Manage related APIs
-    path('{}/review/problem'.format(basicUrl), views.reviewProblem),
-    path('{}/delete/problem'.format(basicUrl), views.deleteProblem),
+    path(f'{basicUrl}/review/problem', views.reviewProblem),
+    path(f'{basicUrl}/delete/problem', views.deleteProblem),
 
 
 
